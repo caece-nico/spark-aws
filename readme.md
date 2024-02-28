@@ -13,6 +13,11 @@
     - [Spark flatMap](#.-spark-flatMap)
     - [Spark rdd filter](#.-spark-rdd-filter)
     - [Ejercicio rapido 2](#.-ejercicio-rapido-2)
+    - [Spark Distinct](#.-Spark-distinct)
+    - [Spark GroupByKey](#.-spark-groupbykey)
+    - [Spark ReduceByKey](#.-spark-reducebykey)
+    - [Ejercicio rapido 3](#.-ejercicio-rapido-3)
+    - [Spark Count y CountByValue](#.-spark-count-y-counbyvalue)
 
 
 
@@ -265,3 +270,118 @@ fileText.filter(foo).collect()
 ```
 
 ### Ejercicio rapido 2
+
+```
+Construir un filtro que elimine las palabras que comiencen con a o c y devolver todo en un flatMap
+```
+
+```python
+fileText = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/quiz2.txt")
+fileText.collect()
+
+fileText.flatMap(lambda x:x.split(' '))\
+    .filter(lambda x: x.startswith("a") or x.startswith("c")).collect()
+```
+
+### Spark Distinct
+
+Se usa para obtener valores distintos de un RDD.
+
+```python
+from pyspark import SparkContext, SparkConfig
+
+cf = SparkConfig().setAppName('readFile')
+spark = SparkContext.getOrCreate(conf=cf)
+
+fileText = spark.textfile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/wordcount.txt")
+
+fileText.flatmap(lambda x:x.split(" ")).distinct().collect()
+```
+
+### Spark GroupByKey
+
+Se usa para crear grupos basados en __keys__. Para que esta transformacion funciono bien, los datos deben estar presentados en forma de tuplas.
+(key1, val1), (key2, val2)....(keyn, valn)
+Devuelve un __RDD__ y para devolver los datos se combina con __mapValues(list)__ otra transformacion.
+
+1. Se debe llevar cada registro a la forma de (key, val) usando __map__
+2. Se aplica GroupByKey()
+
+Cuando aplicamos GroupByKey lo que obtenemos es:
+
+|Agrupacion|
+|-------|
+|(key1, [val1, val2, val3])|
+|(key2, [val1, val2])|
+
+Y estos valores son un iterable:
+
+('1', <pyspark.resultiterable.ResultIterable at 0x7f74d82375b0>) que para poder visualizarlo usamos __mapValues__
+
+resultado final: ('101', [1, 1, 1])
+
+```python
+from pyspark import SparkContext, SparkConfig
+
+cf = SparkConfig().setAppName('readFile')
+spark = SparkContext.getOrCreate(conf=cf)
+
+fileText = spark.textfile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/wordcount.txt")
+
+rdd_split = text.flatMap(lambda x: x.split(' '))
+rdd_key_val = rdd_split.map(lambda x: (x, 1))
+rdd_reduce = rdd_key_val.groupByKey()
+rdd_mapVal = rdd_reduce.mapValues(list).collect()
+```
+
+### Spark ReduceByKey
+
+Es usado para combinar data basado en key en un RDD. Tiene los mismos requisitos de __GroupByKey__, los datos deben estar presentados en formato de Tupla (key, val).
+
+
+
+```python
+from pyspark import SparkContext, SparkConfig
+
+cf = SparkConfig().setAppName('readFile')
+spark = SparkContext.getOrCreate(conf=cf)
+
+fileText = spark.textfile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/wordcount.txt")
+
+rdd_split = text.flatMap(lambda x:x.split(' '))
+rdd_map = rdd_split.map(lambda x: (x, 1))
+rdd_reduce = rdd_map.reduceByKey(lambda x,y: x + y)
+print(rdd_reduce.collect())
+```
+
+¿Cómo funciona __reduceByKey__?
+
+Es similar al GroupByKey, primero lo que hace es agrupar las mismas __keys__ y luego por un proceso __iterativo__ suma los valores __x+y__ hasta que sumo todos los valores de la __key__ dejando un unico par __(key,val)__
+
+__Ejemplo__
+
+|Rdd|iteracion|accion|
+|---|---------|------|
+|[('gato',1), ('gato',1), ('gato', 1)]|1|agrupa por key y suma:  (gato, 1) + (gato, 1)|
+|[('gato',2), ('gato', 1)]|2|agrupa por key y suma: (gato, 2) + (gato, 1)
+|[('gato 3)]|3|no hace nada|
+
+### Ejercicio rapido 3
+
+```
+Hacer un script que devuelva la cantidad de cada palabra en el archivo de texto.
+```
+
+```python
+textFile = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/quiz2.txt")
+type(textFile)
+
+#textFile.collect()
+rdd_flat= textFile.flatMap(lambda x:x.split(' '))
+rdd_key_val = rdd_flat.map(lambda x: (x, 1))
+rdd_reduce = rdd_key_val.reduceByKey(lambda x, y: x + y)
+print(rdd_reduce.collect())
+```
+
+### Spark Count y CountByValue
+
