@@ -18,6 +18,8 @@
     - [Spark ReduceByKey](#.-spark-reducebykey)
     - [Ejercicio rapido 3](#.-ejercicio-rapido-3)
     - [Spark Count y CountByValue](#.-spark-count-y-counbyvalue)
+    - [Rdd saveAsTExtFile](#.-Rdd-saveAsTextFile)
+    - [Rdd cambiar nro. de particiones](#.-rdd-cambiar-nro.-de-particiones)
 
 
 
@@ -385,3 +387,82 @@ print(rdd_reduce.collect())
 
 ### Spark Count y CountByValue
 
+__Count()__ es una acción que se aplica sobre un __rdd__ que devuelve la cantidad total de elementos.
+
+__CounyByValue()__ devuelve la cantidad de veces que un elemento existe en un __rdd__ en un __dict__
+
+```python
+textFile = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/quiz2.txt")
+type(textFile)
+
+#textFile.collect()
+rdd_flat= textFile.flatMap(lambda x:x.split(' '))
+
+print(rdd_flat.Count())
+print(rdd_flat.CountByValue())
+```
+
+### Rdd saveAsTExtFile
+
+```
+Es una acción que se usa para guardar un RDD en un archivo de texto.
+```
+
+¿Como funciona?
+
+Esta función crea una carpeta con el nombre que le pongamos al archivo y dentro crea un __rdd__ que estará dividido en __por defecto dos particiones__. Un archivo tendra el 60% de los datos y el otro el 40% aproximadamente.
+
+```python
+textFile = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/quiz2.txt")
+type(textFile)
+
+#textFile.collect()
+rdd_flat= textFile.flatMap(lambda x:x.split(' '))
+
+rdd_flat.getNumPartitions()
+
+rdd_flat.saveAsTextFile("../data/miRDDTextFile")
+```
+
+![rdd-save-textfile](./img/pyspark-rdd-saveTextFile.png)
+
+### Rdd cambiar nro. de particiones
+
+Por defecto __el numero de particiones de un rdd es dos__ pero este valor se puede cambiar.
+
+Para consultar el numero de particiones hacemos:
+
+```python
+rdd_x.getNumPartitions()
+```
+
+Para modificar el numero de particiones tenemos dos opciones:
+
+|opcion|descricion|comando|resultado|
+|------|----------|-------|---------|
+|repartition|Se usa para cambiar el numero de particiones de un __rdd__ x| rdd.repartition(nro_de_particiones)|Crea un nuevo __rdd__|
+|coalesce|Se usa para decrementar el numero de particiones en un __rdd__|rdd.coalesce(number_of_partitions)|Crea un nuevo __rdd__|
+
+
+```python
+textFile = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/quiz2.txt")
+
+
+rdd_flat = textFile.flatMap(lambda x:x.split(' '))
+print(rdd_flat.getNumPartitions())
+
+rdd_flat_4 = rdd_flat.repartition(4)
+rdd_flat_4.saveAsTextFile("../data/miPartition")
+print(rdd_flat_4.getNumPartitions())
+```
+
+En este ejemplo partimos de un __rdd__ con 2 particiones por defecto y se lo incrementamos a 4, por lo tanto __tendremos 4 archivos__
+
+```python
+print(rdd_flat_4.getNumPartitions())
+rdd_flat_coalesce = rdd_flat_4.coalesce(1)
+rdd_flat_coalesce.saveAsTextFile("../data/miPartitionColasce")
+print(rdd_flat_coalesce.getNumPartitions())
+```
+
+Seguidamente tomamos el último __rdd__ de 4 particiones y se las reducimos a __una particion__ como resultado tendremos un __unico archivo en el directorio de particiones__
