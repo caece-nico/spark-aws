@@ -527,4 +527,25 @@ donde lo que se busca es obtener el promedio por __mes__.
 Optativo: __Se puede agregar datos al dataset y obtener un promedio por ciudad y mes__
 
 
+__IMPORTANTE__ debemos darnos cuenta que no nos importa la columna __city__ asique una vez que hacemos el __split__ la eliminamos
 
+```python
+mesRDD = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/average_quiz_sample.csv")
+print(mesRDD.count())
+
+mesRDD_map = mesRDD.map(lambda x: x.split(","))
+mesRDD_map2 = mesRDD_map.map(lambda x: (x[0], (int(float(x[2])), 1)))
+```
+
+Con el RDD con la forma
+
+(key, (raiting, 1)) __reducimos y sumarizamos__
+
+```python
+
+mesRDD_map2_reduce = mesRDD_map2.reduceByKey(lambda x, y: (x[0]+y[0], x[1] +y[1]) )
+
+mesRDD_map2_reduce.map(lambda x:(x[0], x[1][0] / x[1][1])).collect()
+```
+
+__exactamente igual que el primer ejemplo de AVG__
