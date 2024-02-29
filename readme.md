@@ -22,6 +22,9 @@
     - [Rdd cambiar nro. de particiones](#.-rdd-cambiar-nro.-de-particiones)
     - [Rdd finding AVG](#.-rdd-finding-avg)
     - [Ejercicio rapido 3](#.-ejercicio-rapido-3)
+    - [Spark Maximos y Minimos](#.-spark-maximos-y-minimos)
+    - [Ejercicio rapido 4](#.-ejercicio-rapido-4)
+4. [Spark Proyecto](#4.-spark-proyecto)
 
 
 ## 1. Introduccion
@@ -476,11 +479,11 @@ Este dataset contiene:
 |columnas|descripcion|
 |--------|-----------|
 |1|nombre de la pelicula (str)|
-|2|raiting de la pelicula (int)|
+|2|rating de la pelicula (int)|
 
-Vamos a calcular por cada pelicula su __Raiting AVG__
+Vamos a calcular por cada pelicula su __rating AVG__
 
-1. Vamos a crear un nuevo RDD que tenga las __tuplas__ con (key, (val,1))donde key= pelicula y val= raiting y 1 es un numero constante que luego vamos a sumar para nos devuelva la __cantidad de ocurrencias__
+1. Vamos a crear un nuevo RDD que tenga las __tuplas__ con (key, (val,1))donde key= pelicula y val= rating y 1 es un numero constante que luego vamos a sumar para nos devuelva la __cantidad de ocurrencias__
 
 ```python
 movieRDD = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/movie_ratings.csv")
@@ -511,9 +514,9 @@ __importante__ a esta altura lo que tenemos es:
 |elemento|indice|descripcion|Detalle|
 |--------|------|-----------|-------|
 |('The Shawshank Redemption')|0|Key|The Shawshank Redemption'|
-|(12, 4)|1|Val|Es una tupla que contiene la suma de los raitings y la cantidad de ocurrencias|
+|(12, 4)|1|Val|Es una tupla que contiene la suma de los ratings y la cantidad de ocurrencias|
 
-Lo que necesitamos hacer es una __lambda__ que reciba x y use x[0] para la __key__ x[1][0] para __la suma de los raitings__ y x[1][1] __para la cantidad de ocurrencias__ y calcule el promedio.
+Lo que necesitamos hacer es una __lambda__ que reciba x y use x[0] para la __key__ x[1][0] para __la suma de los ratings__ y x[1][1] __para la cantidad de ocurrencias__ y calcule el promedio.
 
 ```python
 movieRDD_reduce.map(lambda x:(x[0], x[1][0]/x[1][1])).collect()
@@ -539,7 +542,7 @@ mesRDD_map2 = mesRDD_map.map(lambda x: (x[0], (int(float(x[2])), 1)))
 
 Con el RDD con la forma
 
-(key, (raiting, 1)) __reducimos y sumarizamos__
+(key, (rating, 1)) __reducimos y sumarizamos__
 
 ```python
 
@@ -549,3 +552,64 @@ mesRDD_map2_reduce.map(lambda x:(x[0], x[1][0] / x[1][1])).collect()
 ```
 
 __exactamente igual que el primer ejemplo de AVG__
+
+
+### Spark Maximos y Minimos
+
+Para encontrar maximos y minimos tambein vamos a usar el dataset de __movie_rating.csv__
+
+Para cada movie queremos ver el __minimo y maximo__ rating
+
+Para poder calcular MAximo y Minimo usamos __reduceByKey()__ donde esta transformacion toma los grupos de (key, val) y lo que queremos es que la __lambda x,y:  devuelva si x > y__
+
+Es importante destacar que esta comparación en una lambda devuelve _un booleano__ por __true o false__ así que hay que especificarle lo que queremos ver.
+
+1. Creamos el __RDD__ con (Key, Val)
+```python
+movieRDD = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/movie_ratings.csv")
+print(movieRDD.count())
+
+movieRDD_map = movieRDD.map(lambda x:(x.split(",")[0], int(x.split(",")[1]) ))
+print(movieRDD_map.collect())
+```
+
+2. Usando __.reduceByKey()__ traemos el minimo por Pelicula
+
+```python
+movieRDD_map.reduceByKey(lambda x, y: x  if x < y else y).collect()
+```
+
+3. Usando __.reduceByKey()__ traemos el maximo por Pelicula
+
+```python
+movieRDD_map.reduceByKey(lambda x, y: x  if x > y else y).collect()
+```
+
+### Ejercicio rapido 4
+
+En este ejercicio usamos el dataset de __average_quiz_sample.csv__ de las ciudades por mes y rating.
+
+__debemos devolver el mayor y menor rating por cada ciudad__
+
+Para resolverlo nos quedamos solo con las columnas __ciudad__ y __rating__
+
+1. Importamos el data set y lo convertimos a (key, val)
+
+```python
+cityRDD = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/average_quiz_sample.csv")
+print(cityRDD.count())
+
+cityRDD_map = cityRDD.map(lambda x: (x.split(",")[1], int(float(x.split(",")[2]))))
+```
+
+2. El siguiente paso es usar __.reduceByKey()__ para encontrar el maximo y minimo usando un condicional dentro de la lamnda.
+
+```python
+cityRDD_max = cityRDD_map.reduceByKey(lambda x,y: x if x > y else y)
+print(cityRDD_max.collect())
+
+cityRDD_min = cityRDD_map.reduceByKey(lambda x,y: x if x < y else y)
+print(cityRDD_min.collect())
+```
+
+## 4. Spark Proyecto
