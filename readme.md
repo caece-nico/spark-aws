@@ -482,9 +482,25 @@ Vamos a calcular por cada pelicula su __Raiting AVG__
 
 1. Vamos a crear un nuevo RDD que tenga las __tuplas__ con (key, (val,1))donde key= pelicula y val= raiting y 1 es un numero constante que luego vamos a sumar para nos devuelva la __cantidad de ocurrencias__
 
+```python
+movieRDD = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/movie_ratings.csv")
+print(movieRDD.count())
+
+movieRDD_map = movieRDD.map(lambda x: (\
+                                        x.split(",")[0], \
+                                        (int(x.split(",")[1]),1)
+                                        )
+                            )
+```
+
 2. Luego reducimos con un __.reduceByKey__ para obtener algo así:
 (key, (suma(val), suma(1))) o lo que seria igual a 
 (key, (x[0]+y[0], x[1]+y[1]))
+
+```python
+movieRDD_reduce = movieRDD_map.reduceByKey(lambda x, y: (x[0]+y[0], x[1]+y[1]))
+print(movieRDD_reduce.collect())
+```
 
 3. Calculamos el promedio entre (x,y) para cada pelicula.
 
@@ -499,10 +515,16 @@ __importante__ a esta altura lo que tenemos es:
 
 Lo que necesitamos hacer es una __lambda__ que reciba x y use x[0] para la __key__ x[1][0] para __la suma de los raitings__ y x[1][1] __para la cantidad de ocurrencias__ y calcule el promedio.
 
+```python
+movieRDD_reduce.map(lambda x:(x[0], x[1][0]/x[1][1])).collect()
+```
+
 
 ### Ejercicio rapido 3
 
 Para este ejecicio usamos el dataset __average_quiz_sample.csv__
 donde lo que se busca es obtener el promedio por __mes__.
 Optativo: __Se puede agregar datos al dataset y obtener un promedio por ciudad y mes__
+
+
 
