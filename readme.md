@@ -17,10 +17,11 @@
     - [Spark GroupByKey](#.-spark-groupbykey)
     - [Spark ReduceByKey](#.-spark-reducebykey)
     - [Ejercicio rapido 3](#.-ejercicio-rapido-3)
-    - [Spark Count y CountByValue](#.-spark-count-y-counbyvalue)
+    - [Spark Count y CountByValue](#.-spark-count-y-countbyvalue)
     - [Rdd saveAsTExtFile](#.-Rdd-saveAsTextFile)
     - [Rdd cambiar nro. de particiones](#.-rdd-cambiar-nro.-de-particiones)
-
+    - [Rdd finding AVG](#.-rdd-finding-avg)
+    - [Ejercicio rapido 3](#.-ejercicio-rapido-3)
 
 
 ## 1. Introduccion
@@ -466,3 +467,42 @@ print(rdd_flat_coalesce.getNumPartitions())
 ```
 
 Seguidamente tomamos el último __rdd__ de 4 particiones y se las reducimos a __una particion__ como resultado tendremos un __unico archivo en el directorio de particiones__
+
+### Rdd finding AVG
+
+Para esta practica vamos a trabajar con el dataset __movie_rating.csv__
+Este dataset contiene:
+
+|columnas|descripcion|
+|--------|-----------|
+|1|nombre de la pelicula (str)|
+|2|raiting de la pelicula (int)|
+
+Vamos a calcular por cada pelicula su __Raiting AVG__
+
+1. Vamos a crear un nuevo RDD que tenga las __tuplas__ con (key, (val,1))donde key= pelicula y val= raiting y 1 es un numero constante que luego vamos a sumar para nos devuelva la __cantidad de ocurrencias__
+
+2. Luego reducimos con un __.reduceByKey__ para obtener algo así:
+(key, (suma(val), suma(1))) o lo que seria igual a 
+(key, (x[0]+y[0], x[1]+y[1]))
+
+3. Calculamos el promedio entre (x,y) para cada pelicula.
+
+__importante__ a esta altura lo que tenemos es:
+
+('The Shawshank Redemption', (12, 4))
+
+|elemento|indice|descripcion|Detalle|
+|--------|------|-----------|-------|
+|('The Shawshank Redemption')|0|Key|The Shawshank Redemption'|
+|(12, 4)|1|Val|Es una tupla que contiene la suma de los raitings y la cantidad de ocurrencias|
+
+Lo que necesitamos hacer es una __lambda__ que reciba x y use x[0] para la __key__ x[1][0] para __la suma de los raitings__ y x[1][1] __para la cantidad de ocurrencias__ y calcule el promedio.
+
+
+### Ejercicio rapido 3
+
+Para este ejecicio usamos el dataset __average_quiz_sample.csv__
+donde lo que se busca es obtener el promedio por __mes__.
+Optativo: __Se puede agregar datos al dataset y obtener un promedio por ciudad y mes__
+
