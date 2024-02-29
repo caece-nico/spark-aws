@@ -29,6 +29,8 @@
 
 ## 1. Introduccion
 
+[Tutorial interesante de Spark](https://sparkbyexamples.com/spark/spark-rdd-join/)
+
 PySpark es un Wrapper de Spark para Python. Se usa principalmente para el procesamiento en __streaming__ o __batch__ processing.
 
 Tambien se puede usar en otros proyectos como __Machine Learning__
@@ -613,3 +615,26 @@ print(cityRDD_min.collect())
 ```
 
 ## 4. Spark Proyecto
+
+Para este proyecto vamos a usar el dataset __StudentData.csv__
+
+|columnas|detalle|
+|--------|-------|
+|age|La edad del alumno (int)|
+|gender|El geenro del alumno (str)|
+|name|EL nombre del alumno (str)|
+|course|El curso en el que está apuntado (str)|
+|roll|? (int)|
+|marks|La nota del alumno de o..100 (int)
+|mail|EL mail del alumno (str)|
+
+__Se pide__
+
+1. El numero de estudiantes en el File.
+2. El total de notas por estudiantes M y F.
+3. Mostrar el total de alumnos que aprobaron o desaprobaron. Para aprobar se necesita 50+ puntos.
+4. El numero total de alumnos por curso.
+5. El total de notas por curso.
+6. El AVG de notas de alumnos por curso.
+7. El maximo y minimo de notas por curso.
+8. EL AVG de edad de M y F.
