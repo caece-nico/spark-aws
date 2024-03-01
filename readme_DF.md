@@ -22,7 +22,9 @@ Indice
         - __Count()__
         - __Distinct()__
         - __Duplicate()__
-
+    - [Spark ejercicio rapido](#.-spark-ejercicio-rapido)
+    - [Spark orderby/sort](#.-spark-orderby/sort)
+    - [Spark groupBY](#.-spark-groupBy)
 
 
 ## 1. Introduccion
@@ -456,4 +458,90 @@ Es usa para obtener el primer registro único segpun una seleccion de columnas.
 ```python
 df.dropDuplicates(["gender","age"]).show()
 df.dropDuplicates(["age"]).show()
+```
+
+### Spark ejercicio rapido
+
+```
+Para este ejercicio usamos StudentData.csv.
+Se pide escribir un codigo que muestre todos los registros unicos por "age", "gender" y "couser".
+```
+
+```python
+from pyspark.sql import SparkSession
+
+schema = StructType([
+    StructField("age", IntegerType(), True),
+    StructField("gender", StringType(), True),
+    StructField("name", StringType(), True),
+    StructField("course", StringType(), True),
+    StructField("roll", StringType(), True),
+    StructField("marks", IntegerType(), True),
+    StructField("emails", StringType(), True),
+])
+
+df = spark.read.options(schema=schema, header=True).csv("/mnt/d/Proyectos/Tutorial-SparkAWS/data/StudentData.csv")
+
+df.dropDuplicates(["gender", "age", "course"]).show(4)
+```
+
+Mismo resultado.
+
+```python
+df2 = df.select("age", "gender", "course").distinct()
+df2.count()
+```
+
+### Spark orderBY/sort
+
+```
+Al igual que en SQL .sort() se usa para ordernar el resultado de un DataFrame según determinada columna o varias. Tambien podemos usar .orderBy().
+Por defecto el orden es ascendente.
+```
+
+1. De a una columna
+
+```python
+df.sort(df.age.asc()).show()
+```
+
+2. De a dos o mas columnas.
+
+```python
+df.sort(col('age').asc(), col('gender').desc()).show()
+```
+
+__Para especificar las columnas podemos usar _dot notation_ y tambien _col()___
+
+__IMPORTANTE__ _sort_ se usa sobre columnas numericas, sobre _string_ no funciona bien.
+
+### Spark ejercicio rapido
+
+```
+Para este ejercicio trabajamos con el archivo OfficeData.csv
+```
+
+Se pide.
+1. Crear un DF ordernado por la columna __bonus__ de forma ascendente
+2. Crear un DF ordenado por las columnas __age__ y __salary__ en orden descendente y ascendente.
+3. Crear un DF ordenado por __age__ __bonus__ y __salario__ en orden descendente, descentente y ascendente.
+
+__Ver solucion en Notebook: 13. Spark ejercicio rapido - Sort() u orderBy()__
+
+
+### Spark groupBy
+
+```
+Se usa para agrupar sobre una o varias columnas.
+```
+
+```python
+df.groupBy("gender").show()
+```
+
+Esto así como está no se peude hacer, luego de hacer agregacion se debe hacer alguna __agregacion__
+
+```python
+df.groupBy("gender").count().show()
+
 ```
