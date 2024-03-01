@@ -25,6 +25,11 @@ Indice
     - [Spark ejercicio rapido](#.-spark-ejercicio-rapido)
     - [Spark orderby/sort](#.-spark-orderby/sort)
     - [Spark groupBY](#.-spark-groupBy)
+        - __count()__
+        - __sum()__
+        - __max()__
+        - __min()__
+        - __avg()__
 
 
 ## 1. Introduccion
@@ -535,6 +540,8 @@ __Ver solucion en Notebook: 13. Spark ejercicio rapido - Sort() u orderBy()__
 Se usa para agrupar sobre una o varias columnas.
 ```
 
+1. __GroupBy en una columna.__
+
 ```python
 df.groupBy("gender").show()
 ```
@@ -543,5 +550,36 @@ Esto así como está no se peude hacer, luego de hacer agregacion se debe hacer 
 
 ```python
 df.groupBy("gender").count().show()
+df.groupBy("gender").sum("marks").show()
+df.groupBy("gender").avg("marks").show()
+```
 
+2. __GroupBy en mas de una columna.__
+
+```python
+from pyspark.sql.functions import col
+
+df.groupBy(col("gender"), col("age")).count().show()
+```
+
+3. Como hacer agegaciones multiples.
+
+Cuando hacermos __.groupBy()__ sobre un DataFrame no podemos concatenar las agregaciones, por ejemplo __.groupBy().count().sum().show()__ Esto no está permitido.
+
+Para poder agregar mas de una agregacion debemos importar las funcions __from pyspark.sql.functions import sum, avg, max, min, mean, count__ y al momento de referenciar una agregacion lo hacemos dentro de __.agg()__
+
+```python
+from pyspark.sql.functions import sum, avg, max, min, mean, count
+
+df.groupBy(col("gender"), col("age")).agg(count("*"),min("marks"), sum(col("marks"))).show()
+```
+
+4. Cambiar nombre de las columnas de  funciones de agregacion
+
+__Podemos cambiar el nombre de las columnas de agregación usando la funcion _.alias()___
+
+```python
+from pyspark.sql.functions import sum, avg, max, min, mean, count
+
+df.groupBy(col("gender"), col("age")).agg(count("*").alias("cantidad_total"),min("marks").alias("nota_minima"), sum(col("marks")).alias("suma_notas")).show()
 ```
