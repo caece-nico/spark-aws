@@ -18,6 +18,10 @@ Indice
         - __contains()__
         - __like()__
     - [Spark ejercicio rapido](#.-spark-ejercicio-rapido)
+    - [spark SQL](#.-spark-sql)
+        - __Count()__
+        - __Distinct()__
+        - __Duplicate()__
 
 
 
@@ -411,3 +415,45 @@ __(marks/total_marks)*100__
 4. Filtrar los estudiantes con AVG > 60% in __CLOUD__
 5. Mostrar los nombres y notas de __3__ y __4__
 
+__Ver solucion en notebook 9. Spark Ejercicio rápido__
+
+
+### Spark SQL
+
+1. __.Count()__
+
+```
+Es una accion que se usa sobre un DataFrame o sobre una transformacion. La usamos para obtener el numero total de registros o total de registros sobre una condición.
+No se puede combinar con .show()
+```
+
+```python
+from pyspark.sql.functions import col
+
+df.count()
+df.filter(col("age")>18).count()
+```
+
+2. __.Distinct()__
+
+```
+Es una transformacion que se usa para mostrar registros unicos.
+```
+
+```python
+from pyspark.sql.functions import col
+
+df.distinct().show()
+df.select("gender", "age").distinct.count()
+```
+
+El ultimo ejemplo deberia mostrar la cantidad de registros únicos para la combinacion __genero__ y __edad__
+
+3. __.dropDuplicates()__ 
+
+Es usa para obtener el primer registro único segpun una seleccion de columnas.
+
+```python
+df.dropDuplicates(["gender","age"]).show()
+df.dropDuplicates(["age"]).show()
+```
