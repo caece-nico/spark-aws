@@ -23,6 +23,7 @@
     - [Rdd finding AVG](#.-rdd-finding-avg)
     - [Ejercicio rapido 3](#.-ejercicio-rapido-3)
     - [Spark Maximos y Minimos](#.-spark-maximos-y-minimos)
+    - [Spark mapValue](#.-spark-mapvalue)
     - [Ejercicio rapido 4](#.-ejercicio-rapido-4)
 4. [Spark Proyecto](#4.-spark-proyecto)
 
@@ -587,6 +588,51 @@ movieRDD_map.reduceByKey(lambda x, y: x  if x < y else y).collect()
 movieRDD_map.reduceByKey(lambda x, y: x  if x > y else y).collect()
 ```
 
+
+### Spark mapValue
+
+El mapValue es una transformacion que devuelve un nuevo __rdd__ que permite acceder directamente a los valores de la key simplificando el __subseting__
+
+Ejemplo con __map__:
+
+```python
+movieRDD = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/movie_ratings.csv")
+print(movieRDD.count())
+
+movieRDD_map = movieRDD.map(lambda x: (\
+                                        x.split(",")[0], \
+                                        (int(x.split(",")[1]),1)
+                                        )
+                            )
+```
+
+2. Luego reducimos con un __.reduceByKey__ para obtener algo así:
+(key, (suma(val), suma(1))) o lo que seria igual a 
+(key, (x[0]+y[0], x[1]+y[1]))
+
+```python
+movieRDD_reduce = movieRDD_map.reduceByKey(lambda x, y: (x[0]+y[0], x[1]+y[1]))
+print(movieRDD_reduce.collect())
+```
+3. Calculamos el promerdio
+
+```python
+movieRDD_reduce.map(lambda x:(x[0], x[1][0]/x[1][1])).collect()
+```
+
+Ejemplo con __mapValue__:
+
+
+3. Calculamos el promerdio
+
+```python
+movieRDD_reduce.mapValue(lambda x: x[0]/x[1]).collect()
+```
+
+```
+Vemos que al usar map value ya no necesitamos especificar la KEY, esto es porque la tarnsformacion mapValue() trabaja directamente sobre los valores de la key y siempre la va a devolver por eso el subseting es mas simple.
+```
+
 ### Ejercicio rapido 4
 
 En este ejercicio usamos el dataset de __average_quiz_sample.csv__ de las ciudades por mes y rating.
@@ -638,3 +684,111 @@ __Se pide__
 6. El AVG de notas de alumnos por curso.
 7. El maximo y minimo de notas por curso.
 8. EL AVG de edad de M y F.
+
+__Resolucion__
+
++ Leemos el archivo.
+
+```python
+Students = spark.textFile("/mnt/d/Proyectos/Tutorial-SparkAWS/data/StudentData.csv")
+print(Students.count())
+#print(Students.collect())
+```
+
++ Elminamos la cabecera
+
+```python
+header = Students.first()
+Students_one = Students.filter(lambda x:x != header)
+```
+
++ Transformamos las columnas para tener un __rdd__ con el formato que necesitamos
+
+```python
+Students_MF_RDD = Students_one.map(lambda x: \
+    (
+        int(x.split(",")[0]),
+        x.split(',')[1],
+        x.split(',')[2],
+        x.split(',')[3],
+        x.split(',')[4],
+        int(x.split(',')[5]),
+        x.split(',')[6]
+    ))
+
+##Students_MF_RDD.collect()
+```
+
+1. El numero de estudiantes en el File.
+
+```python
+Students_MF_RDD.count()
+```
+
+2. El total de notas por estudiantes M y F.
+
+```python
+Students_MF_RDD.map(lambda x: (x[1],x[5])).reduceByKey(lambda x, y: x + y).collect()
+```
+
+
+3. Mostrar el total de alumnos que aprobaron o desaprobaron. Para aprobar se necesita 50+ puntos.
+
+```python
+rdd_pass = Students_MF_RDD.filter(lambda x: x[5]> 50).count()
+rdd_fail = Students_MF_RDD.filter(lambda x: x[5] <= 50).count()
+print(rdd_fail, rdd_pass)
+```
+
+4. El numero total de alumnos por curso.
+
+```python
+Students_MF_RDD.map(lambda x: (x[3], 1)).reduceByKey(lambda x,y: x + y).collect()
+```
+
+5. El total de notas por curso.
+
+```python
+Students_MF_RDD.map(lambda x: (x[3], x[5])).reduceByKey(lambda x,y: x+y).collect()
+```
+
+6. El AVG de notas de alumnos por curso.
+
++ __usando map__
+
+```python
+Students_MF_RDD.map(lambda x: (x[3], (x[5], 1)))\
+    .reduceByKey(lambda x,y : (x[0] + y[0], x[1] + y[1]))\
+        .map(lambda x: (x[0], x[1][0]/ x[1][1]))\
+            .collect()
+```
+
++ __usando mapValue__
+
+```python
+Students_MF_RDD.map(lambda x: (x[3], (x[5], 1)))\
+    .reduceByKey(lambda x,y : (x[0] + y[0], x[1] + y[1]))\
+        .mapValues(lambda x: (x[0] /  x[1]))\
+            .collect()
+```
+
+7. El maximo y minimo de notas por curso.
+
+```python
+Students_MF_RDD.map(lambda x: (x[3], x[5])).reduceByKey(lambda x,y: x if x > y else y).collect()
+
+Students_MF_RDD.map(lambda x: (x[3], x[5])).reduceByKey(lambda x,y: x if x < y else y).collect()
+```
+
+8. EL AVG de edad de M y F.
+
+```python
+Students_MF_RDD.map(lambda x: (x[1], (x[0], 1)))\
+    .reduceByKey(lambda x,y:(x[0]+y[0], x[1]+y[1]))\
+        .mapValues(lambda x: x[0] / x[1] ).collect()
+```
+
+
+
+
+
