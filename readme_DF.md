@@ -9,6 +9,8 @@ Indice
     - [Spark **kwargs options](#.-spark-usar-**kwargs)
     - [Spark DF from RDDs](#.-spark-df-from-rdds)
     - [Spark Select DF Columns](#.-spark-select-df-columns)
+    - [Spark withColunn](#.-spark-withcolumn)
+    - [Spark withColumnRename](#.-spark-withcolumnrename)
 
 
 ## 1. Introduccion
@@ -247,4 +249,61 @@ df.select(df.columns[3:]).show(4)
 ```python
 df.select(col("age"), df.columns[-1]).show(4)
 ```
+
+### Spark withColumn
+
+```
+Esta transformacion se usa para manipular el valor de una columna.
+Por ejemplo si tenemos un DF con 100 columnas pero solo nos interesa cambiarle el tipo de dato a una, no tiene sentido crear un StructType.
+En su lugar podemos usar un .withColumn() y manipular el valor de la columna directamente.
+```
+1. Casteos
+
+```python
+from pyspark.sql.functions import col
+
+df.withColumn("roll2", col("roll").cast("Integer")).show(5)
+```
+
+En este ejemplo vamos a ver que se crea una nueva columna __roll2__ y va a tomar la columna __roll__ y castearla a __Integer__
+Si hubieramos especificado el mismo nombre __roll__ la columna se sobrescribe.
+
+2. Manipulacion de valores
+
+```python
+from pyspark.sql.functions import col
+
+df.withColumn("marks2", col("marks") + 5).show(5)
+```
+
+Esto lo que hace es agregarle 5 a cada registro creando una nueva columna __marks2__
+
+
+3. Crear nueva columna con valor Hardcode
+
+Para poder crear un valor __fijo__ o __constante__ debemos usar el tipo __lit__ o literal que nos permite insertar un valor fijo en la transformacion __withColumn()__
+
+```python
+from pyspark.sql.functions import col, lit
+
+df.withColumn('pais',lit('ARG')).show(5)
+```
+
+__si no se especifica lit(), tendriamos un error de tipos__ Si necesitamos modificar una columna por un valor fijo, tambien usamos __lit()__
+
+4. Concatenacion de .withColumn()
+
+```
+Si necesitamos manipular varias columnas lo podemos hacer concatenando o usnado .dot notation, teniendo en cuenta que lo que se va encadenando es el DF modificado por los pasos anterior.
+```
+
+```python
+from pyspark.sql.functions import col
+
+df.withColumn('marks2', col('marks') - 10).withColumn('marks2', col('marks') + 20)).show(5)
+```
+
+_En este ejemplo si en el DF original marks tenia el valor 59, primero le resta 10, quedando en 49 y luego le suma 20, dejando el resultado en 69._
+
+### Spark withColumnRename
 
