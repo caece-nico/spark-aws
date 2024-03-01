@@ -11,6 +11,14 @@ Indice
     - [Spark Select DF Columns](#.-spark-select-df-columns)
     - [Spark withColunn](#.-spark-withcolumn)
     - [Spark withColumnRename](#.-spark-withcolumnrename)
+    - [Spark DF Filter/Where](#.-spark-df-filter/where)
+        - __isin()__
+        - __startswith()__
+        - __endswith()__
+        - __contains()__
+        - __like()__
+    - [Spark ejercicio rapido](#.-spark-ejercicio-rapido)
+
 
 
 ## 1. Introduccion
@@ -306,4 +314,100 @@ df.withColumn('marks2', col('marks') - 10).withColumn('marks2', col('marks') + 2
 _En este ejemplo si en el DF original marks tenia el valor 59, primero le resta 10, quedando en 49 y luego le suma 20, dejando el resultado en 69._
 
 ### Spark withColumnRename
+
+1. withColumnRename
+
+```
+Es una transformación que se usa para cambiar el nombre de una columna.
+Para que el cambio de nombre se haga efectivo debemos asignarlo a un DataFrame
+```
+
+```python
+df = df.withColumnRename("gender", "sex").withColumnRename("roll","roll_number")
+```
+
+2. Alias
+
+Tambien se puede cambiar el nombre de una columna en __runtime__ y no a nivel de DF. Para esto combinamos __.select(col("columna").alias())__
+
+```python
+from pyspark.sql.functions import col
+
+df.select(col("age").alias("Edad")).show()
+```
+
+### Spark DF Filter/Where
+
+Se usa para filtrar resultados. Se puede usar tanto __filter__ como __where__
+
+1. Condición simple.
+
+```python
+from pyspark.sql.functions import col
+
+df.filter(col("course")=='DB').show(5)
+df.filter(df.course == "DB").show(5)
+```
+
+2. Condición Multiple.
+
+```python
+df.filter(
+            (df.course == "DB") & (df.marks > 50)
+        ).show(5)
+```
+
+1. Condicion multiple con __isin__
+
+Para checkear condiciones múltiples podemos usar __isin__.
+Podemos crear una lista con las condiciones que nos iteresan.
+
+```python
+from pyspark.sql.functions import col
+
+l_courses = ["DB", "Cloud", "OOP"]
+df.filter(col("course").isin(l_courses))
+```
+
+4. Filtros sobre __Strings__ con __.startswith()__ y __.endwith()__
+
+Usamos esta transformacion para checkear que una cadena comienza o termina con determinada letra o caracter.
+
+```python
+from pyspark.sql.functions import col
+
+df.filter(df.course.startswith("D")).show(2)
+df.filter(col("course").startswith("D")).show(2)
+```
+
+5. Filtros con __.contains()__ 
+
+Lo usamos para determinar si un String o cadena contiene otro __string__
+
+```python
+from pyspark.sql.functions import col
+
+df.filter(df.name.contains("Eleno")).show(2)
+df.filter(col("name").contains("Eleno")).show(2)
+```
+
+Otra forma de usar __.contains()__ es con __like__
+
+```python
+from pyspark.sql.functions import col
+
+df.filter(df.name.like("%Ele%")).show(2)
+df.filter(col("name").like("%Ele%")).show(2)
+```
+
+### Spark ejercicio rapido
+
+Para este ejecucion vamos a usar el DataSet __StudentsData.csv__
+
+1. Crear una nueva columna __total marks__ con el valor 120
+2. Crear una columna __total mark avg__ para cada alumno con la formula 
+__(marks/total_marks)*100__
+3. Filtrar los estudiantes con AVG > 80% in __OOP__
+4. Filtrar los estudiantes con AVG > 60% in __CLOUD__
+5. Mostrar los nombres y notas de __3__ y __4__
 
