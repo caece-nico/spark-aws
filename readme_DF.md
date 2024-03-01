@@ -571,7 +571,10 @@ Para poder agregar mas de una agregacion debemos importar las funcions __from py
 ```python
 from pyspark.sql.functions import sum, avg, max, min, mean, count
 
-df.groupBy(col("gender"), col("age")).agg(count("*"),min("marks"), sum(col("marks"))).show()
+df.groupBy(col("gender"), col("age"))\
+    .agg(count("*"),\
+        min("marks"), \
+            sum(col("marks"))).show()
 ```
 
 4. Cambiar nombre de las columnas de  funciones de agregacion
@@ -581,5 +584,8 @@ __Podemos cambiar el nombre de las columnas de agregación usando la funcion _.a
 ```python
 from pyspark.sql.functions import sum, avg, max, min, mean, count
 
-df.groupBy(col("gender"), col("age")).agg(count("*").alias("cantidad_total"),min("marks").alias("nota_minima"), sum(col("marks")).alias("suma_notas")).show()
+df.groupBy(col("gender"), col("age"))\
+    .agg(count("*").alias("cantidad_total")\
+        ,min("marks").alias("nota_minima")\
+            , sum(col("marks")).alias("suma_notas")).show()
 ```
