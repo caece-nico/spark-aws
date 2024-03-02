@@ -32,6 +32,9 @@ Indice
         - __avg()__
     - [Spark groupBy & Filtering](#.-Spark-groupBy-&-Filtering)
     - [Spark ejercicio rapido](#.-spark-ejercicio-rapido)
+    - [Spark ejercicio rapido](#.-spark-ejercicio-rapido)
+3. [Spark UDF](#3.-spark-udf)
+    - [Spark ejercicio rapido](#.-spark-ejercicio-rapido)
 
 
 ## 1. Introduccion
@@ -632,4 +635,54 @@ Se espera.
 4. Por cada curso, el maximo, minimo y AVG por grupo de edad.
 
 
-__Ver resolucion en Notebook__
+__Ver resolucion en Notebook 16. Spark ejercicio rápido GroupBy()__
+
+
+### Spark ejercicio rapido 
+
+```
+Para este ejercicio usamos el archivo WordData.txt
+```
+
+Se pide.
+
+1. Calcular el total de cada palabra en el archivo.
+
+__ver resolucion en Notebook 17. Spark ejercicio rápido WordCount__
+
+
+## 3. Spark UDF
+
+```
+Son User Defined Functions. Son similares a las Funciones que creamos para manipular RDD y las podemos mapear a cada columna.
+```
+
+
+```python
+from pyspark.sql.types import IntegerType
+from pyspark.sql.functions import udf, lit
+
+def get_total_slary(salary, bonus):
+    return salary + bonus
+
+getTotalSalaryUDF = udf(lambda x,y: get_total_slary(x,y), IntegerType())
+
+df.withColumn("total_salario", getTotalSalaryUDF(col("salary"), col("bonus")) ).show(10)
+```
+
+Es importante notar que primero definimos una funcion y luego la instanciamos como __UDF__ como una funcion lambda, indicando lo que devuelve.
+
+### Spark ejercicio rapido
+
+```
+Para este ejercicio vamos a trabajar con el archivo OfficeData.csv
+```
+
+Se pide.
+
+1. Crear una nueva columna que muestre el incremento en el sueldo segun:
+- Si el empleado esta en NY, 10% en salario y 5% en bonus
+- Si esta en CA, 12% en salario y 3% en bonus
+
+__Ver solucion en notebook: 20. Spark Ejercicio rapido - UDF .withColumn()__
+
