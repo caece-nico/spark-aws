@@ -30,6 +30,8 @@ Indice
         - __max()__
         - __min()__
         - __avg()__
+    - [Spark groupBy & Filtering](#.-Spark-groupBy-&-Filtering)
+    - [Spark ejercicio rapido](#.-spark-ejercicio-rapido)
 
 
 ## 1. Introduccion
@@ -589,3 +591,45 @@ df.groupBy(col("gender"), col("age"))\
         ,min("marks").alias("nota_minima")\
             , sum(col("marks")).alias("suma_notas")).show()
 ```
+
+5. __Cómo funciona _groupBy()___
+
+### Spark groupBy & Filtering
+
+```
+Si hacemos un filter o .filter() antes de un .groupBy() el agupado se hace solo el DataFrame resultante despues del filtrado.
+```
+__En este ejemplo el agrupado es solo sobre los registros del filtro por edad > 35__
+
+```python
+df.filter(col("marks") > 35).groupBy(col("gender"),col("age")).agg(count("*").alias("total_gender")).show()
+```
+
+Si ahora quiero filtrar solo los __total_gender__ > 100 concatenando un __.filter()__ no voy a poder porque me indica que esa columna no existe, esto se debe a que aun sigo trabajando sobre el __rdd df__ 
+Para poder aplicar este filtro debo generar un __rdd__ con la primer consulta y aplicar al nuevo __rdd__
+
+```python 
+rdd_df.filter(rdd_df.total_gender > 50).show()
+```
+
+Pero podemos solucionarlo con un artilugio usando __col()__
+
+```python
+df.filter(col("marks") > 35).groupBy(col("gender"),col("age")).agg(count("*").alias("total_gender")).filter(col("total_gender") > 50).show()
+```
+
+### Spark ejercicio rapido
+
+```
+Para este ejecucio vamos a utilizar el DataSet StudentsData.csv
+```
+
+Se espera.
+
+1. El numero total de estudiantes en cada curso.
+2. EL numero total de H y M en cada curso.
+3. EL total de notas por cada genero en cada curso.
+4. Por cada curso, el maximo, minimo y AVG por grupo de edad.
+
+
+__Ver resolucion en Notebook__
