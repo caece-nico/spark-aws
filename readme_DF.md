@@ -35,6 +35,7 @@ Indice
     - [Spark ejercicio rapido](#.-spark-ejercicio-rapido)
 3. [Spark UDF](#3.-spark-udf)
     - [Spark ejercicio rapido](#.-spark-ejercicio-rapido)
+4. [Spark Cache and Persist](#4.-spark-cache-and-persist)
 
 
 ## 1. Introduccion
@@ -686,3 +687,6 @@ Se pide.
 
 __Ver solucion en notebook: 20. Spark Ejercicio rapido - UDF .withColumn()__
 
+## 4. Spark cache and persist
+
+![spark-cache](./img/spark-cache.png)
