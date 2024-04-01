@@ -1,0 +1,5 @@
+gender,age,count(1)
+Female,29,245
+Female,28,256
+Male,28,238
+Male,29,261

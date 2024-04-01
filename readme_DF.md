@@ -36,6 +36,16 @@ Indice
 3. [Spark UDF](#3.-spark-udf)
     - [Spark ejercicio rapido](#.-spark-ejercicio-rapido)
 4. [Spark Cache and Persist](#4.-spark-cache-and-persist)
+5. [From DF to RDD](#5.-from-df-to-rdd)
+6. [Spark SQL](#6.-spark-sql)
+7. [Write DataFrame](#7.-write-dataframe)
+    - __ingnore mode__
+    - __replace mode__
+    - __append mode__
+    - __overwrite mode__
+8. [Trabajo Integrador](#8.-trabajo-integrador)
+    - Resuelto con DF
+    - Resuelto con SQL
 
 
 ## 1. Introduccion
@@ -690,3 +700,135 @@ __Ver solucion en notebook: 20. Spark Ejercicio rapido - UDF .withColumn()__
 ## 4. Spark cache and persist
 
 ![spark-cache](./img/spark-cache.png)
+
+Es una técnica que se usa para guardar los datos de forma temporal en la cache para optimizar el WorkFlow.
+
+En la imagen vemos que tenemos __transformaciones__ seguida de dos __Acciones__
+EN el primer ejemplo primero procesa las dos transformaciones y luego __aplica__ la primer accion y luego la segunda accion. Peor para aplicar la segunda acción debe volver a ejecutar la transformacion.
+
+En el siguiente ejemplo las __dos transformaciones__ son seguidas de una cache, lo que quiere decir que la segunda __Accion__ no necesitará volver a ejecutar las tarnsformaciones sinó que usará lo que esté en la __cache__.
+
+POr debajo de la __cache__ se usa la __persistencia en memoria.__ 
+
+```python
+
+schema_rdd = StructType([
+    StructField("age", IntegerType(), True),
+    StructField("gender", StringType(), True),
+    StructField("name", StringType(), True),
+    StructField("course", StringType(), True),
+    StructField("roll", StringType(), True),
+    StructField("marks", IntegerType(), True),
+    StructField("email", StringType(), True)
+])
+
+df = spar.read.option("header", "True").schema(schema_rdd).csv("/mnt/d/Proyectos/Tutorial-SparkAWS/data/StudentData.csv")
+
+## transformation 1
+df = df.groupBy("course", "gender", "age").count()
+
+## transformation 2
+
+df = df.withColumn("dummy", col("age") * 100)
+
+## cache
+
+df.cache()
+
+## action
+
+df.show()
+```
+
+```
+Si ejecutamos la acción una y otra vez primero ejecutaria la transformacion 1 y luego la 2 todas las veces que llamemos a la acción.
+Distinto seria el caso si cacheamos las transformaciones. 
+```
+
+## 5. From DF to RDD
+
+Los DF son un wrapper de los RDD´s.
+
+```
+La conversion es bastante directa, de un DF pasamos a una RDD
+```
+1. Conversion a un RDD
+
+```python
+df = spark.read.schema(schema).option("header","true").csv(path)
+
+type(df)
+
+mi_rdd = df.rdd
+
+type(mi_rdd)
+```
+
+__La ventaja de convertir un DF a un RDD es que cuando trabajamos con un RDD en lugar de usar indices podemos usar lables o nombres de las columnas__
+
+2. Conversion a un df
+
+## 6. Spark SQL
+
+```
+Podemos ejecutar querys contra una tabla temporal creada a partir de un DF.
+```
+
+```python
+from pyspark.sql.functions import col
+from pyspark import SparkContext, SparkSession
+
+mi_df = spark.read.\
+    option("header","true").\
+        schema(mi_schema).\
+            .csv(path)
+
+mi_df.createOrReplaceTempView("miTempView")
+
+sql = """
+SELECT *
+FROM miTempView;
+"""
+
+rts = spark.sql(sql)
+
+rts.show(4)
+```
+
+## 7. Write DataFrame
+
+Para escribir un __DataFrame__ usamos el método __.write__
+
+```python
+df.write.option("header", "true").schema(mi_schema).csv(path)
+```
+
+Existen distintod modos para escribir un archivo dependiendo si existe o no en el directorio destino.
+
+- overwrite: sobrescribe lo que existe.
+- append: agrega nuevas lineas al archivo existente.
+- ignore: Si ya existe no hace nada.
+- error: se fuerza un error.
+
+```python
+df.write.mode("overwrite").csv(path)
+```
+
+## 8. Trabajo Integrador
+
++ Para desarrollar este proyecto usamos el __DataSet__ OfficeDataProject.csv.
+
+Primero lo resolvemos usando los métodos de DataFrame y luego con SQL.
+
+- Consignas.
+
+1. Número total de empleados en la compania.
+2. Número total de departamentos en la compania.
+3. El nombre de los departamentos en la compania.
+4. Número de empleados por cada departamento.
+5. Número de empleados en cada estado.
+6. Número de empleados en cada estado y departamento.
+7. Salario máximo y mínimo en cada departamento en orden ascendente.
+8. Nombre de los empleados en NY en __Finance__ cuyo bonus es mayor al bono del promedio de los empleados de NY.
+9. Aumentar $500 el salario de todos los empleados con edad mayor a 45.
+10. Guardar en un DF los empleados cuya edad es >= 45.
