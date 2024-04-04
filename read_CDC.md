@@ -91,8 +91,24 @@ Con el nuevo grupo disponible lo que hacemos es seleccionar el __Grupo de parame
 
 Y creamos la __BD__
 
+![](./img/cdc_mysql_08.png)
+
 
 ## 4. Creacion de S3 Bucket
+
+La segunda parte y __antes de crear los EndPoints__ vamos a crear el __S3 Bucket__.
+
+Creamos un bucket con un nomber unico. __mysql-cdc-bucket__
+
+![](./img/cdc-bucket-01.png)
+
+Hacemos que el bucket sea publico
+
+![](./img/cdc-bucket-02.png)
+
+Y finalmente creamos el bucket
+
+![](./img/cdc-bucket-03.png)
 
 
 ## 5. Creacion de DMS
