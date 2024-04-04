@@ -81,11 +81,15 @@ Visualizamos el Grupo creado.
 
 ![](./img/cdc_mysql_06-1.png)
 
-Con el nuevo grupo disponible lo que hacemos es seleccionar el __Grupo de parametros__ en la ventana de creacion de la BD. Si no se actualiza solo, es necesario hacer __F5__ y volver a cargar.
+Al crear el grupo, debemos cambiar el valor de un parametro __binlog_format__ a __ROW__ y guardarlo. 
 
 ![](./img/cdc_mysql_06-2.png)
 
+Con el nuevo grupo disponible lo que hacemos es seleccionar el __Grupo de parametros__ en la ventana de creacion de la BD. Si no se actualiza solo, es necesario hacer __F5__ y volver a cargar.
+
 ![](./img/cdc_mysql_07.png)
+
+Y creamos la __BD__
 
 
 ## 4. Creacion de S3 Bucket
