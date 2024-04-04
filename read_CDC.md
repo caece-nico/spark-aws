@@ -113,7 +113,26 @@ Y finalmente creamos el bucket
 
 ## 5. Creacion de DMS
 
+En el tercer punto vamos a crear el __DMS__ o __Data Migration Service__
+
+[Qué es Data Migration Service?](https://youtu.be/ouia1Sc5QGo)
+
+[Caso de uso](https://docs.aws.amazon.com/dms/latest/oracle-to-aurora-postgresql-migration-playbook/index.html)
+
+
 ### 5.1 DMS - Source EndPoint
+
+Creamos el Source Endopint y nos aseguramos de elegir la BD que creamos para la replicacion.
+
+![](./img/cdc-endpoint-01.png)
+
+Automaticamente se cargan los datos de la __DRS__ y especificamos el usuario y password creados.
+
+![](./img/cdc-endpoint-02.png)
+
+Creamos el __ENDPOINT___
+
+![](./img/cdc-endpoint-03.png)
 
 ### 5.2 DMS - Destination EndPoint
 
