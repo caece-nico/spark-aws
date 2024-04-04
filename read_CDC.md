@@ -93,6 +93,20 @@ Y creamos la __BD__
 
 ![](./img/cdc_mysql_08.png)
 
+__IMPORTANTE__ REcordar que para poder logarnos en la instancia de BD debemos tener las reglas de __Inbound__ de la VPN activas para 0.0.0.0/0 Todas.
+
+![](./img/cdc_mysql_09.png)
+
+Si no tiene las reglas correctas las creamos.
+
+Paso 1.
+
+![](./img/cdc_mysql_10.png)
+
+Paso 2.
+
+![](./img/cdc_mysql_11.png)
+
 
 ## 4. Creacion de S3 Bucket
 
@@ -138,8 +152,6 @@ Creamos el __ENDPOINT___
 
 Creamos el destination Endpoint para el S3 Bucket.
 
-### 5.3 DMS Instancia
-
 Para poder crear un __endpoint__ para S3 debemos crear un Role IAM.
 
 Primero creamos un __endpoint__ destino
@@ -171,7 +183,20 @@ Terminamos creando el EndPoint a un destino.
 
 ![](./img/cdc-bucket-endpoint-07.png)
 
+### 5.3 DMS Instancia
+
+Hasta ahora tenemos La base de datos, el Bucket S3 y los dos EndPoints.
+Ahora necesitamos crear la __INSTANCIA DE REPLICACION__ que usara DMS.
+
+Dentro de DMS Service.
+
+Lo mas importante al crear una instancia es hacerlo usando __t.micro__ gratuito y acceso publico.
+
+![](./img/cdc-instancia-rep-02.png)
+
 ## 6. RDS y Dumping Data Connection
+
+
 
 ## 7. DMS Full Load
 
