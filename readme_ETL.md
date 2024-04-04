@@ -6,6 +6,7 @@
 4. [Load data](#4.-load-data)
     - [Entorno Local  - Docker]()
     - [Entorno AWS]()
+5. [Recursos importantes](#5.-recursos-importantes)
 
 ## 1. Introduccion
 
@@ -327,3 +328,11 @@ rd_df.filter(col("splitedDataExplode")=="Tomorrow").\
         sum("count").\
             show()
 ```
+
+## 5. Recursos importantes
+
+Buenos recursos de PySpark y Postgres ETL
+
+[Pyspark-Postgres](https://mmuratarat.github.io/2020-06-18/pyspark-postgresql-locally)
+[Pyspark JDBC](https://spark.apache.org/docs/latest/sql-data-sources-jdbc.html)
+[Pyspark-postgres-2](https://www.machinelearningplus.com/pyspark/pyspark-connect-to-postgresql/#google_vignette)
