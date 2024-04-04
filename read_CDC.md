@@ -136,7 +136,40 @@ Creamos el __ENDPOINT___
 
 ### 5.2 DMS - Destination EndPoint
 
+Creamos el destination Endpoint para el S3 Bucket.
+
 ### 5.3 DMS Instancia
+
+Para poder crear un __endpoint__ para S3 debemos crear un Role IAM.
+
+Primero creamos un __endpoint__ destino
+
+![](./img/cdc-bucket-endpoint-01.png)
+
+Antes de seguir debemos crear un Role IAM que tenga permisos sobre DMS 
+__Esto lo hacemos desde otra ventana al servicio IAM__
+
+![](./img/cdc-bucket-endpoint-02.png)
+
+y FullAccess al Bucket S3.
+
+![](./img/cdc-bucket-endpoint-03.png)
+
+vemos los detalles del role y lo creamos.
+
+![](./img/cdc-bucket-endpoint-04.png)
+
+Lo que nos importa del role es su ruta, la cual copiamos y luego pegamos para crear el endpoint.
+
+![](./img/cdc-bucket-endpoint-05.png)
+
+Cargamos los datos faltantes en el endpoint con el nuevo role creado.
+
+![](./img/cdc-bucket-endpoint-06.png)
+
+Terminamos creando el EndPoint a un destino.
+
+![](./img/cdc-bucket-endpoint-07.png)
 
 ## 6. RDS y Dumping Data Connection
 
