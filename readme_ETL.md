@@ -333,6 +333,6 @@ rd_df.filter(col("splitedDataExplode")=="Tomorrow").\
 
 Buenos recursos de PySpark y Postgres ETL
 
-[Pyspark-Postgres](https://mmuratarat.github.io/2020-06-18/pyspark-postgresql-locally)
-[Pyspark JDBC](https://spark.apache.org/docs/latest/sql-data-sources-jdbc.html)
-[Pyspark-postgres-2](https://www.machinelearningplus.com/pyspark/pyspark-connect-to-postgresql/#google_vignette)
+1. [Pyspark-Postgres](https://mmuratarat.github.io/2020-06-18/pyspark-postgresql-locally)
+2. [Pyspark JDBC](https://spark.apache.org/docs/latest/sql-data-sources-jdbc.html)
+3. [Pyspark-postgres-2](https://www.machinelearningplus.com/pyspark/pyspark-connect-to-postgresql/#google_vignette)
