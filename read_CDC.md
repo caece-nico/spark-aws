@@ -190,29 +190,141 @@ Ahora necesitamos crear la __INSTANCIA DE REPLICACION__ que usara DMS.
 
 Dentro de DMS Service.
 
+![](./img/cdc-instancia-rep-01.png)
+
 Lo mas importante al crear una instancia es hacerlo usando __t.micro__ gratuito y acceso publico.
 
 ![](./img/cdc-instancia-rep-02.png)
 
 ## 6. RDS y Dumping Data Connection
 
+Una vez creada la primera parte de la Arquitectura vamos a probar insertar datos.
 
+Para esto usamos el archivo __DUMP__ en el directorio ./CBC_DATA.
+EL mismo tiene la creacion del esquema, la tabla y los Inserts.
+
+__ES MUY IMPORTANTE QUE LA TABLA TENGA PK, SINO REPLICATION ONGOING NO FUNCIONA__
+
+Primero vamos a ejecutar la creacion del schema, la tabla y los inserts.
+
+![](./img/cbc-dump-data-01.png)
 
 ## 7. DMS Full Load
+
+Ahora, despues de haber insertado los primeros datos podemos iniciar un proceso de migracion de datos con lo que tenemos hasta ahora.
+
+1. ingresamos al servicio AWS DMS y al S3 para ver que los datos se estén copiando.
+
+Dentro de DMS, creamos una tarea de __migracion de datos__
+
+Elegimos un nombre para la Tarea, la instancia de replica que creamos y los EndPoints. En este punto debemos elegir __el tipo de replica__, en este caso elegimos __full load__ para que tome todos los cambios mas lo que ya existe. 
+
+![](./img/cdc-full-load-01.png)
+
+2. En las propiedades de la tabla dejamos todo tal cual pero cambiamos la cantidad de tablas a migrar en paralelo. Por defecto son 8 pero nosotors solo tenemos una.
+
+![](./img/cdc-full-load-02.png)
+
+3. En asignación de tablas especificamos los datos del esquema y la tabla que debe mirar el proceso.
+Podemos usar __wildcards__ para elegir mas de una tabla o esquema.
+
+![](./img/cdc-full-load-03.png)
+
+4. DEsactivamos la evaluacion previa y especificamos que la nueva tarea se ejcute por primera vez al momento de ser creada.
+
+![](./img/cdc-full-load-04.png)
+
+5. Vemos que la tarea se creó y luego se ejecutó.
+
+![](./img/cdc-full-load-05.png)
+
+6. Si vamos a S3 vemos que se creó un directorio con la estructura __esquema/tabla/datos.csv__
+
+![](./img/cdc-full-load-06.png)
 
 
 ## 8. DMS replication Ongoing
 
+Luego de haber creado el __full load__ ahora podemos empezar a hacer cambios en la BD y ver como toma los cambios.
+
+```sql
+Select * from ahmad_schema.Persons
+update ahmad_schema.Persons set FullName = 'ABC XYZ' where PersonId = 7;
+INSERT INTO ahmad_schema.Persons VALUES (130,'Alica Bing','New York');
+INSERT INTO ahmad_schema.Persons VALUES (131,'Malinda Bing','Detroit');
+INSERT INTO ahmad_schema.Persons VALUES (132,'Chandler Bing','Portland');
+update ahmad_schema.Persons set FullName = 'ABC XYZ' where PersonId = 8;
+DELETE FROM ahmad_schema.Persons where PersonId = 10;
+```
+
+Ejecutamos este SQL y vamos al __BUCKET__ a ver el nuevo archivo generado.
+
+![](./img/cdc-repli-ongoin-01.png)
+
+Vemos lo que hay dentro del nuevo archivo generado.
+
+```
+U,7,ABC XYZ,Phoenix
+I,130,Alica Bing,New York
+I,131,Malinda Bing,Detroit
+I,132,Chandler Bing,Portland
+U,8,ABC XYZ,Denver
+D,10,Jack Hicks,Houston
+```
+
+|accion|dato anterior|dato nuevo|
+|------|-------------|----------|
+|u-update|Phoenix|ABC XYZ|
+|i-insert|no tiene|toda la linea
+|d-delete|todo lo que trae|no tiene|
+
 
 ## 9. Stop Instances
 
+Hasta ahora tenemos desarrollada la primera parte de la Arquitectura.
+
+![](./img/cdc-01-02.png)
+
+Como vamos a seguir trabajando en las funciones Lambda es una buena práctica detener la instancia para que no consuma recursos y __$$$__
+
+1. Primero detenemos la tarea de migracion.
+
+![](./img/cdc-stop-instance-01.png)
+
+2. Luego detemos la instancia de DB.
+
+![](./img/cdc-stop-instance-02.png)
+
 ## 10. Glue Jobs
+
+Antes de crear la funciones lambda vamos a crear el __job de GLUE__.
+
+Son los scripts. EL primero se encargará del __full-load__ y el segundo del __onGoing__
+
 
 ### 10.1 Full Load
 
+1. Se crea el .py con nombre __SparkCDCFullLoad.ipynb__
+
+Este archivo script tomará del __S3__ temporal el file full load y lo moverá al __S3__ final.
+
 ### 10.2 Change Capture
 
+1. Este segundo proceso o script será el que captura los cambios. Tiene la escencia del proceso __CDC__
+
+Por ahora lo vamos a poner dentro del mismo archivo ___SparkCDCFullLoad.ipynb__
+
+__Pasos 3 y 3.1__
+
 ### 10.3 Glue Job CDC
+
+Con el archivo creado (Script) agregamos la logica.
+Para esto vamos a iterar sobre los registros del file __replication onGoing__ con tres opciones: una para Insert, Delete y otra para Update.
+
+__Paso 4.__
+
+En esta parte usamos el archivo de __Replication onGoing__ y le hacemos un loop por cada tipo de __operacion__ a cada registro.
+
 
 ## 11. Lambda function y Trigger
 
