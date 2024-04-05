@@ -326,6 +326,8 @@ __Paso 4.__
 En esta parte usamos el archivo de __Replication onGoing__ y le hacemos un loop por cada tipo de __operacion__ a cada registro.
 
 
+
+
 ## 11. Lambda function y Trigger
 
 ### 11.1 Testing Trigger
