@@ -398,17 +398,327 @@ Con la funcion lambda y su desencadenador creada podemos testearla.
 
 ### 11.1 Testing Trigger
 
+Para probar la funcion lambda primero debemos hacer un deploy de la misma, crear una prueba y ver el log usando __cloudWatch__
+
+Hacemos __deploy__ de la funcion lambda.
+
+![](./img/cdc-lambda-08.png)
+
+Creamos una prueba de test con el nombre __abc__
+
+![](./img/cdc-lambda-09.png)
+
+Corremos una prueba solo para ver que la funcion compile.
+
+![](./img/cdc-lambda-10.png)
+
+Para ver los logs que se generan en las corridas de la funcion lambda vamos al __servicio CloudWatch__ y buscamos los grupos de eventos asociados a la funcion lambda. Buscamos el ultimo __log__
+
+![](./img/cdc-lambda-11.png)
+
+En el registro vemos la primer prueba que se ejecutó de forma manual.
+
+![](./img/cdc-lambda-12.png)
+
+Para probar la __funcion lambda__ vamos a cargar un archivo en el __bucket S3__ para ver la funcion se dispare.
+
+![](./img/cdc-lambda-13.png)
+
+Cuando volvemos al __servicio CloudWatch__ vemos que la funcion efectivamente ejecutó.
+
+![](./img/cdc-lambda-14.png)
 
 
 ### 11.2 Obtener FileName
 
+Para continuar con el desarrollo vamos a intentar obetener el nombre del archivo que dispara a la funcion lambda.
+
+```python
+import json
+
+def lambda_handler(event, context):
+    print("Hello world from Py")
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Hello from Lambda!')
+    }
+```
+
+Este es el codigo de nuestra funcion lambda, donde los parametros de entrada __event__ contienen la informacion de lo que disparó la ejecución.
+
+__event__ es un json al que podemos acceder para obetener los datos del __bucket__ y su contenido.
+
+```python
+bucketName = event["Records"][0]["s3"]["bucket"]["name"]
+fileName = event["Records"][0]["s3"]["object"]["key"]
+```
+
+__IMPORTANTE__ una vez que hacemos cambios en la funcion recordar hacer __deploy__
+
+ejemplo de JSON de respuesta de un evento
+
+```YML
+{'Records': [{'eventVersion': '2.1', 'eventSource': 'aws:s3', 'awsRegion': 'us-east-1', 'eventTime': '2024-04-06T05:09:32.123Z', 'eventName': 'ObjectCreated:Put', 'userIdentity': {'principalId': 'A2X7NO3O3LNA9Y'}, 'requestParameters': {'sourceIPAddress': '152.168.40.136'}, 'responseElements': {'x-amz-request-id': '9ENCT4964NBT1BDT', 'x-amz-id-2': 'lg5X4A2fAqDgr2+sFN3xAYQW3mZ4rNm9Pcn5/Yr4cN1eJRVF0Af4JCt5LQKdVkyIipVMMHtITKUFTXhJqfXLrzgPKJpMSc4Q'}, 's3': {'s3SchemaVersion': '1.0', 'configurationId': 'e2905f2c-9e54-4d15-8d81-2f069a122434', 'bucket': {'name': 'mysql-cdc-bucket', 'ownerIdentity': {'principalId': 'A2X7NO3O3LNA9Y'}, 'arn': 'arn:aws:s3:::mysql-cdc-bucket'}, 'object': {'key': 'cdc-lambda-15.png', 'size': 49963, 'eTag': 'af6671c29a155a0536dec5c963f10f90', 'sequencer': '006610D90C105CBB79'}}}]}
+```
+
+Le agregamos a nuestra __lambda__ las variables para capturar el number del bucket y del archivo cargado. REcordar hacer un nuevo __Deploy__ para que tome los cambios.
+
+![](./img/cdc-lambda-15.png)
+
+Cargamos el nuevo archivo en el __S3__ y buscamos el __log en CloudWatch__. Seguramente no usa el mismo Treath que antes, puede haber creado una nuevo.
+
+![](./img/cdc-lambda-16.png)
+
+Vemos el contenido de la variable __event__ en el Log.
+
+![](./img/cdc-lambda-17.png)
+
+Ya tenemos como capturar el nombre del Bucket y El archivo, ahora necesitamos crear el Job de Glue y pasar estos datos.
+
+
 ### 11.3 Creacion de Glue Job
+
+Antes de poder crear un job de glue debemos tener un roll asociado al mismo, el cual debe tener permisos __fullAccess__ sobre S3 y CloudWatch.
+
+![](./img/cdc-glue-01.png)
+
+LE damos un nombre al roll y vemos los permisos finales.
+
+![](./img/cdc-glue-02.png)
+
+Ahora vamos a crear un Job de Glue desde la consola de GLUe, elegimos la Opcion __Script__ -> job Spark y en la pestaña __Job details__ ponemos:
+
+![](./img/cdc-glue-03.png)
+
+Lo mas importante en esta pantalla es especificar el Roll de Glue y poner la cantidad de Procesadores en 2 para no consumir muchos recursos.
+
+![](./img/cdc-glue-04.png)
+
+### 11.3.1 Agregamos el Job de Glue a la Funcion Lambda.
+
+Cuando creamos la funcion lambda vemos que la pantalla principal nos da dos opciones, Source trigger y destination.
+En Source trigger seleccionamos __S3__ pero los destinations de Lambda no incluyen __Job Glue__ por lo tanto debemos agregarlo en el codigo.
+
+![](./img/cdc-glue-05.png)
+
+para poder agregar servicios de AWS como codigo usamos __boto3__
+
+```python
+import json
+import boto3
+
+
+
+def lambda_handler(event, context):
+    print("Hello world from Py")
+    print(event)
+    
+    bucketName = event["Records"][0]["s3"]["bucket"]["name"]
+    fileName = event["Records"][0]["s3"]["object"]["key"]
+    
+    glue = boto3.client('glue')
+
+    response = glue.start_job_run(
+        JobName = 'glueCDC-pysark',
+        Arguments = {
+            '--s3_target_path_key': fileName,
+            '--s3_target_path_bucket': bucketName
+        }
+    )
+
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Hello from Lambda!')
+    }
+
+
+```
+
+Cuando modificamos la funcion recordad hacer __Deploy__
+
+![](./img/cdc-glue-06.png)
+
+Dentro del Job de Glue que creamos anteriormente lo vamos a __Editar__ y colocamos el siguiente codigo que hace referencia a las variables que se pasan desde __lambda__
+
+```python
+import sys
+
+from awsglue.utils import getResolvedOptions
+
+args = getResolvedOptions(sys.argv, ['s3_target_path_key', 's3_target_path_bucket'])
+bucket = args['s3_target_path_bucket']
+fileName = args['s3_target_path_key']
+
+print(bucket, fileName)
+```
+
+![](./img/cdc-glue-07.png)
+
+Puede ser que dependiendo de la version de GLUE veamos mas lineas de codigo.
+
+__IMPORTANTE__ No usar comillas dobles para referencias variables.
+
 
 ### 11.4 Testing Invoke
 
+Habiendo creado el Job de Glue y referenciado las variables, ahora vamos a cargar un archivo valido en __S3__
+
+![](./img/cdc-glue-08.png)
+
+Vemos en el log de Glue que muestra las dos variables que se debian pasar de la lambda al job de Glue.
+
+![](./img/cdc-glue-09.png)
+
+
 ### 11.5 Writing Glue Shell Job
+
+Despues de haber probado el Job escribimos el job restante usando Spark.
+
+```python
+import sys
+from awsglue.utils import getResolvedOptions
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import when, col
+
+args = getResolvedOptions(sys.argv, ['s3_target_path_key', 's3_target_path_bucket'])
+bucket = args['s3_target_path_bucket']
+fileName = args['s3_target_path_key']
+
+print(bucket, fileName)
+
+inputFilePath = f"s3a://{bucket}/{fileName}"
+finalFilePath = f"s3a://cdc-output-pyspark-nleali/output"
+
+spark = SparkSession.builder.appName("CDC").getOrCreate()
+
+if "LOAD" in inputFilePath:
+    fldf = spark.read.csv(inputFilePath)
+    fldf = fldf.withColumnRenamed("_c0", "id").\
+        withColumnRenamed("_c1", "fullName").\
+            withColumnRenamed("_c2", "City")
+    
+    fldf.write.mode("overwrite").\
+        csv(finalFilePath)
+else:        
+    
+    print("Entramos por ELSE")
+    udf = spark.read.csv(inputFilePath)
+    udf = udf.withColumnRenamed("_c0", "action").\
+        withColumnRenamed("_c1", "id").\
+            withColumnRenamed("_c2", "fullName").\
+                withColumnRenamed("_c3", "city")
+                
+    print("Cargo Onchaing")
+                
+    ffdf = spark.read.csv(finalFilePath)
+    ffdf = ffdf.withColumnRenamed("_c0", "id").\
+            withColumnRenamed("_c1", "fullName").\
+                withColumnRenamed("_c2", "City")
+                
+    print("Cargo Full Load")
+
+    for row in udf.collect():
+        print("{} - {}".format(row, type(row)))
+        if row['action'] == 'U':
+            print('Update')
+            ffdf = ffdf.withColumn("fullName", when(row["id"] == col("id") ,\
+                row["fullName"]).otherwise(ffdf["fullName"]))
+            ffdf = ffdf.withColumn("city", when(row["id"] == ffdf["id"], \
+                row["city"]).otherwise(ffdf["city"]))
+        
+        
+        elif row['action'] == 'D':
+            print('Delete')
+            ffdf = ffdf.filter(col("id") != row["id"])
+            
+        else:
+            print('Insert')
+            insertedRow = [list(row[1:])]
+            columns = ("id", "fullName", "city")
+            newdf = spark.createDataFrame(insertedRow, columns)
+            ffdf = ffdf.union(newdf)
+      
+    print("grabamos el ardhivo final")    
+    ffdf.write.mode("overwrite").csv(finalFilePath)
+```
 
 ## 12. Full load pipeline
 
+Para terminar con el __pipeline__ debemos reiniciar los servicios que habiamos desactivado.
+
+__IMPORTANTE__ Antes de reactivar todos los servicios, recordar vaciar compleamente los buckets.
+
+Para esto primero inciamos la __RDS: Mysql__ y luego el servicio __DMS__.
+
+1. Reiniciamos la BD.
+
+![](./img/cdc-pipeline-01.png)
+
+2. Una vez reiniciado la BD, inciamos el servicio de Migracion de Datos.
+
+![](./img/cdc-pipeline-02.png)
+
+Con el servicio inciado se va a disparar todo el trigger, pero esta vez no va a usar los datos originales sino que puede ser que si ya hicimos algun update solo se migren en el LOAD (Carga inicial) lo que ya está.
+
+![](./img/cdc-pipeline-03.png)
+
+
+4. Vemos que inició el pipeline y creo el archivo LOAD en el bucket temporal y este fué tomado por la __Lambda__ que llamó al proceso __glue__ y lo migró al __bucket final__
+
+![](./img/cdc-pipeline-04.png)
+
+5. Miramos los logs de cloudWatch - Lambda
+
+En el Full Load vemos que toma el archivo LOAD y lo pasa al GLUE
+
+![](./img/cdc-pipeline-05.png)
+
+6. Miramos los logs de cloudWatch - Glue
+
+Vemos que en /outputs/ recibió el archivo y lo copió al __Bucket final__ por ser Load. Y no tiene otro output.
+
+![](./img/cdc-pipeline-06.png)
+
 ## 13. CDC Pipeline
+
+Una vez ejecutado el __job Glue__ que copia el __FullLoad__ ahora vamos a generar unos cambinos en la base de datos para ver como funciona el __Pipeline CDC__
+
+1. Ejecutamos un Update
+
+```sql
+update ahmad_schema.Persons set FullName = 'Nicolas Leali' where personID = 15;
+```
+
+2. Vemos que al generar un cambio se creo un nuevo archivo en el __bucket temporal__
+
+![](./img/cdc-pipeline-07.png)
+
+3. La función Lambda leyó el archivo y lo pasó al proceso Glue.
+
+
+![](./img/cdc-pipeline-08.png)
+
+
+4. En el proceso Glue vemos que el archivo fué tomado y procesado.
+
+![](./img/cdc-pipeline-09.png)
+
+
+## 14. Eliminamos todos los servicios creados.
+
+1. Primero eliminamos la base __RDS__. No vamos a guardar ninguna instantanea asique seleccionamos la opcion no guardar nada.
+
+2. Elminamos la __Data Migration Task__. Primero hay que detenerla y luego eliminarla. Lego los endPoints y el servidor de migracion.
+
+3. Elminamos la funcion lambda.
+
+4. Elminamos los grupos de registro.
+
+5. Eliminamos los buckets.
+
+6. Elminamos el Job Etl Glue.
+
+7. eliminamos los roles.
+
+
 
