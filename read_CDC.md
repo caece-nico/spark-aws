@@ -325,7 +325,43 @@ __Paso 4.__
 
 En esta parte usamos el archivo de __Replication onGoing__ y le hacemos un loop por cada tipo de __operacion__ a cada registro.
 
+Los que vamos a ahcer es replicar las operaciones que se hicieron en la __BD__ pero sobre el archivo __FullLoad__
 
+1. Delete
+
+Para elminar un registro del archivo __fullLoad__ lo que hacemos es volver a crear el archivo con un Filtro para no mostrar la __row__ que esta en el archivo __Replication onGoing__ 
+
+```python
+dfFullLoad = dfFullLoad.filter(col("id") != row["id"])
+```
+
+2. Update
+
+Update es un poco mas difil, paa esto usamos el siguiente código.
+
+```python
+fdFullLoad =fdfFullLoad.withColum("fullName", \
+    when(row["id"] == col("id"), row["fullName"]).\
+        otherwise(fdFullLoad[col("fullName")]))
+
+fdFullLoad = fdFullLoad.withColun("city", \
+    when(row["id"]==col("id"), row["city"]).\
+        otherwise(fdFullLoad[col("fullName")]))
+```
+
+
+3. Insert
+
+Para hacer insert debemos usar la __row__ que se general en el for loop y convertirla a __DF__ y hacerle un __union__ al FD final.
+
+```python
+insertedRow = [list(row[1:])]
+columns = ("id", "fullName", "city")
+df_row = spark.createDataFrame(insertedRow, columns)
+fdFullLoaf.union(df_row)
+```
+
+El union se hace por nombre de columna.
 
 
 ## 11. Lambda function y Trigger
