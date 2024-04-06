@@ -342,13 +342,12 @@ Update es un poco mas difil, paa esto usamos el siguiente código.
 ```python
 fdFullLoad =fdfFullLoad.withColum("fullName", \
     when(row["id"] == col("id"), row["fullName"]).\
-        otherwise(fdFullLoad[col("fullName")]))
+        otherwise(fdFullLoad["fullName"]))
 
 fdFullLoad = fdFullLoad.withColun("city", \
     when(row["id"]==col("id"), row["city"]).\
-        otherwise(fdFullLoad[col("fullName")]))
+        otherwise(fdFullLoad["fullName"]))
 ```
-
 
 3. Insert
 
@@ -366,7 +365,40 @@ El union se hace por nombre de columna.
 
 ## 11. Lambda function y Trigger
 
+EN esta seccion vamos a crear una funcion __lambda__ que recibe el nombre de un archivo y se lo pasa al script creado __en el punto anterior__
+Esta funcion lambda se dispara cuando llega un nuevo archivo al __bucket temporal__.
+
+CReamos una nueva funcion lambda desde __el servicio AWS Lambda__
+
+![](./img/cdc-lambda-01.png)
+
+El servicio lambda debe tener __un roll asociado para poder ejecutar__ asique creamos uno.
+
+![](./img/cdc-lambda-02.png)
+
+EL mismo desde tener tres perfiles o permisos full access. Para el Bucket, CloudWatch (logs) y Glue
+
+![](./img/cdc-lambda-03.png)
+
+Una vez creado volvemos a la pantalla de __lambda functions__ y seleccionamos el AIM Roll creado y creamos la funcion.
+
+![](./img/cdc-lambda-04.png)
+
+COn la funcion lambda creada vamos a __crear el trigger o desencadenadoe__ de S3.
+
+![](./img/cdc-lambda-05.png)
+
+Seleccionamos tipo desencadenador __S3__ y el bucket creado para el proyecto __CDC__ __Cuando creamos un desencadenador podemos elegir la carpeta que debe ver dentro del S3 o ponerle un prefeijo para que solo vea .csv__ en este caso lo dejamos por defecto. 
+
+![](./img/cdc-lambda-06.png)
+
+Con la funcion lambda y su desencadenador creada podemos testearla.
+
+![](./img/cdc-lambda-07.png)
+
 ### 11.1 Testing Trigger
+
+
 
 ### 11.2 Obtener FileName
 
